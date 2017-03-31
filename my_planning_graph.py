@@ -217,7 +217,7 @@ class PlanningGraph():
             a_levels: list of sets of PgNode_a, where each set in the list represents an A-level in the planning graph
         '''
         self.problem = problem
-        self.fs = decode_state(state, problem.state_map)
+        self.fs = decode_state(state, self.problem.state_map)
         self.serial = serial_planning
         self.all_actions = self.problem.actions_list + self.noop_actions(self.problem.state_map)
         self.s_levels = []
@@ -341,16 +341,18 @@ class PlanningGraph():
         assert level > 0
         self.s_levels.append(set())
         s_nodes = [] # since __eq__ is defined, we may not use below method and use a simpler one.
-        for a_node in list(self.a_levels[level-1]):
-            for s_node in list(a_node.effnodes):
-                if s_node in s_nodes:
-                    s_nodes[s_nodes.index(s_node)].parents.add(a_node)
-                else:
-                    s_node_copy = copy.deepcopy(s_node)
-                    s_node_copy.parents.add(a_node)
-                    s_nodes.append(s_node_copy)
-
-        self.s_levels[level].update(s_nodes)
+        for a_node in self.a_levels[level-1]:
+            for s_node in a_node.effnodes:
+                s_node.parents.add(a_node)
+                self.s_levels[level].add(s_node)
+        #         if s_node in s_nodes:
+        #             s_nodes[s_nodes.index(s_node)].parents.add(a_node)
+        #         else:
+        #             s_node_copy = copy.deepcopy(s_node)
+        #             s_node_copy.parents.add(a_node)
+        #             s_nodes.append(s_node_copy)
+        #
+        # self.s_levels[level].update(s_nodes)
 
     def update_a_mutex(self, nodeset):
         ''' Determine and update sibling mutual exclusion for A-level nodes

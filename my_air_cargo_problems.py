@@ -128,9 +128,11 @@ class AirCargoProblem(Problem):
         fs = decode_state(state,self.state_map) # This state_map may need update elsewhere.
         state_pos = fs.pos
         state_neg = fs.neg
-        for action in  self.actions_list:
-            if set(state_pos).issuperset(set(action.precond_pos)) and set(state_neg).issuperset(set(action.precond_neg)):
+        for action in self.actions_list:
+            if set(state_pos).issuperset(set(action.precond_pos)) and set(state_neg).issuperset(set(action.precond_neg)) \
+                    and set(action.effect_add) not in set(state_pos):
                 possible_actions.append(action)
+
         return possible_actions
 
     def result(self, state: str, action: Action):
@@ -143,15 +145,19 @@ class AirCargoProblem(Problem):
         :return: resulting state after action
         """
         # TODO implement
+        # if action.name not in self.actions(state):
+        #     print("available actions: ", )
+        #     for atn in self.actions(state):
+        #         print(atn.name, atn.args,)
+        #     raise AssertionError("action {}{} is not applicable for state {} {}".format(action.name, action.args,state, self.state_map))
         new_state = FluentState([], [])
         fs = decode_state(state,self.state_map)
-        #print("pos in state", fs.pos)
-        #print("neg in state", fs.neg)
+
         new_state.pos = list((set(fs.pos) | set(action.effect_add))- set(action.effect_rem))
         new_state.neg = list((set(fs.neg) - set(action.effect_add)) |  set(action.effect_rem))
-        #print("pos in new state", new_state.pos)
-        #print("neg in new state", new_state.neg)
-        self.state_map = new_state.pos + new_state.neg
+        #state_map should not change!
+        #self.state_map = new_state.pos + new_state.neg
+        #print("state {} after action {}{} is state {}({})".format(state, action.name, action.args, encode_state(new_state, self.state_map), self.state_map))
         return encode_state(new_state, self.state_map)
 
     def goal_test(self, state: str) -> bool:
@@ -306,6 +312,6 @@ def air_cargo_p3() -> AirCargoProblem:
     goal = [expr('At(C1, JFK)'),
             expr('At(C2, SFO)'),
             expr('At(C3, JFK)'),
-            expr('At(C3, SFO)'),
+            expr('At(C4, SFO)'),
             ]
     return AirCargoProblem(cargos, planes, airports, init, goal)
